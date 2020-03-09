@@ -1,6 +1,6 @@
 //import liraries
 import React, { Component } from 'react';
-import { Text, StyleSheet, TouchableOpacity, View, FlatList, TextInput, Dimensions, Animated, Platform } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity, View, FlatList, TextInput, Dimensions, Animated, Platform ,Image} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from 'react-native-modal';
 import Button from './lib/Button';
@@ -44,7 +44,7 @@ class Select2 extends Component {
         let { data } = newProps || this.props;
         data.map(item => {
             if (item.checked) {
-                preSelectedItem.push(item);
+                //preSelectedItem.push(item);
             }
         })
         this.setState({ data, preSelectedItem });
@@ -82,18 +82,29 @@ class Select2 extends Component {
 
     onItemSelected = (item, isSelectSingle) => {
         let selectedItem = [];
+        let trueItemCount=0;
         let { data } = this.state;
         item.checked = !item.checked;
+        let checkIndex=null;
         for (let index in data) {
+            if(data[index].checked) trueItemCount++;
+
             if (data[index].id === item.id) {
                 data[index] = item;
+                checkIndex =index
+
             } else if (isSelectSingle) {
                 data[index].checked = false;
             }
         }
+        if(trueItemCount>4) data[checkIndex].checked=false;
+
         data.map(item => {
-            if (item.checked) selectedItem.push(item);
+              if (item.checked) selectedItem.push(item);
+
+
         })
+        //console.log(selectedItem)
         this.setState({ data, selectedItem });
     }
     keyExtractor = (item, idx) => idx.toString();
@@ -105,9 +116,16 @@ class Select2 extends Component {
                 onPress={() => this.onItemSelected(item, isSelectSingle)}
                 activeOpacity={0.7}
                 style={styles.itemWrapper}>
-                <Text style={[styles.itemText, this.defaultFont]}>
+              {item.name.indexOf("http") >-1? (
+                 <Image
+                  source={{uri: item.name}}
+                  style={{height:100,width:100,alignSelf:'flex-end'}}
+                />):(
+                   <Text style={[styles.itemText, this.defaultFont]}>
                     {item.name}
                 </Text>
+              )}
+
                 <Icon style={styles.itemIcon}
                     name={item.checked ? 'check-circle-outline' : 'radiobox-blank'}
                     color={item.checked ? colorTheme : '#777777'} size={20} />
@@ -137,6 +155,7 @@ class Select2 extends Component {
                 onPress={this.showModal}
                 activeOpacity={0.7}
                 style={[styles.container, style]}>
+
                 <Modal
                     onBackdropPress={this.closeModal}
                     style={{
@@ -153,6 +172,10 @@ class Select2 extends Component {
                             <Text style={[styles.title, this.defaultFont, { color: colorTheme }]}>
                                 {popupTitle || title}
                             </Text>
+                            {/*selectedItem.length>3? "無理":"あと"+(4-selectedItem.length)+"件"*/}
+                          {selectedItem.length>0?( <Text style={[styles.title, this.defaultFont, { color: colorTheme,fontSize: height/60}]}>
+                              { selectedItem.length+"件選択中" }
+                            </Text>):null}
                         </View>
                         <View style={styles.line} />
                         {
@@ -203,11 +226,13 @@ class Select2 extends Component {
                                 onPress={() => {
                                     let selectedIds = [], selectedObjectItems = [];
                                     selectedItem.map(item => {
-                                        selectedIds.push(item.id);
+                                        selectedIds.push(item.name);
                                         selectedObjectItems.push(item);
                                     })
                                     onSelect && onSelect(selectedIds, selectedObjectItems);
-                                    this.setState({ show: false, keyword: '', preSelectedItem: selectedItem });
+                                    this.cancelSelection();
+
+                                    this.setState({ show: false, keyword: '', preSelectedItem: [] });
                                 }}
                                 title={selectButtonText}
                                 backgroundColor={colorTheme}
@@ -236,7 +261,7 @@ class Select2 extends Component {
                                                                 item.checked = false;
                                                             }
                                                             if (item.checked) {
-                                                                preSelectedItem.push(item);
+                                                                //preSelectedItem.push(item);
                                                                 selectedIds.push(item.id);
                                                                 selectedObjectItems.push(item);
                                                             };
@@ -250,7 +275,18 @@ class Select2 extends Component {
                                     }
                                 </View>
                         )
-                        : <Text style={[styles.selectedTitlte, this.defaultFont, selectedTitleStyle]}>{title}</Text>
+                        :
+                        (
+                          true?
+                          (
+                            <Image
+                            style={{tintColor: "#2176F9",height: 25,width: 25}}
+                            source={require('./img/icons8-upload-50.png')}
+                          />
+                           ):(
+                          <Text style={[styles.selectedTitlte, this.defaultFont, selectedTitleStyle]}>{title}{"hoge"}</Text>
+                          )
+                        )
                 }
             </TouchableOpacity>
         );
